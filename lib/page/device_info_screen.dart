@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_listview_example/classes/device.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -67,6 +68,7 @@ class _DeviceInfoScreenState extends State<DeviceInfoScreen> {
   }
 
   _DeviceInfoScreenState(this.deviceIdforWidget);
+  User user = FirebaseAuth.instance.currentUser!;
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_listview_example/classes/device.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -94,6 +95,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   final TextEditingController _deviceName = TextEditingController();
   final TextEditingController _automaticTurnOffCondition = TextEditingController();
+  User user = FirebaseAuth.instance.currentUser!;
 
   @override
   Widget build(BuildContext context) {

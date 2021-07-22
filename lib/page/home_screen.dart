@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_listview_example/classes/basic_tile.dart';
 import 'package:expandable_listview_example/classes/device.dart';
 import 'package:expandable_listview_example/classes/room.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../texts_menu.dart';
@@ -10,11 +11,13 @@ import 'add_room_screen.dart';
 import 'device_info_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
   @override
   void initState() {
     fetchAllRooms().then((value) {});
