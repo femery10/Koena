@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_listview_example/classes/basic_tile.dart';
 import 'package:expandable_listview_example/classes/device.dart';
-import 'package:expandable_listview_example/page/add_device_screen.dart';
+import 'package:expandable_listview_example/classes/room.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../classes/room.dart';
+
+import '../texts_menu.dart';
+import 'add_device_screen.dart';
+import 'add_room_screen.dart';
+import 'device_info_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,11 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     fetchAllRooms().then((value) {});
-    print(roomTilesList.toString());
     super.initState();
   }
 
-  List<BasicTile> deviceTiles = [];
   late BasicTile deviceHolderTile;
   late BasicTile roomTile;
   List deviceIdsList = [];
@@ -34,10 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           deviceIdsList = doc['deviceIds'];
 
-          for (var i = 0; i < deviceIdsList.length; i++) {
+          List<BasicTile> deviceTiles = [];
+          for (var idNumber in deviceIdsList) {
             FirebaseFirestore.instance
                 .collection('devices')
-                .where('deviceId', isEqualTo: deviceIdsList[i])
+                .where('deviceId', isEqualTo: idNumber)
                 .get()
                 .then((QuerySnapshot querySnapshot) {
               querySnapshot.docs.forEach((doc) {
@@ -53,19 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           roomTile = BasicTile(
-              title: doc['roomName'], id: doc['roomId'], devices: deviceTiles);
+              title: doc['roomName'], id: 0, devices: deviceTiles);
 
           roomTilesList.add(roomTile);
-
-          // roomTilesList = [
-          //   BasicTile(title: 'Living Room', id: 1, devices: [
-          //     BasicTile(title: 'TV', id: 1),
-          //     BasicTile(title: "Lighting", id: 2)
-          //   ]),
-          //   BasicTile(title: 'Master Bedroom', id: 2, devices: [
-          //     BasicTile(title: "bOB", id: 3),
-          //   ]),
-          // ];
 
         });
       });
@@ -74,10 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   final roomRef =
-      FirebaseFirestore.instance.collection('rooms').withConverter<Room>(
-            fromFirestore: (snapshot, _) => Room.fromJson(snapshot.data()!),
-            toFirestore: (room, _) => room.toJson(),
-          );
+  FirebaseFirestore.instance.collection('rooms').withConverter<Room>(
+    fromFirestore: (snapshot, _) => Room.fromJson(snapshot.data()!),
+    toFirestore: (room, _) => room.toJson(),
+  );
 
   List<int> deviceIds = [1, 2, 4];
 
@@ -107,60 +100,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text("Kōena App"),
-          centerTitle: true,
-        ),
-        body: Column(
-          children:
-              roomTilesList.map((tile) => BasicTileWidget(tile: tile)).toList(),
-        ),
-        floatingActionButton: ElevatedButton(
-          onPressed: () => Navigator.push(context,
-              MaterialPageRoute(builder: (context) => AddDeviceScreen())),
-          child: Text("Add Device"),
-        ),
-      );
-}
-
-class BasicTileWidget extends StatelessWidget {
-  final BasicTile tile;
-
-  BasicTileWidget({required this.tile});
-
-  // const BasicTileWidget({
-  //   required Key key,
-  //   required this.tile,
-  // }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final title = tile.title;
-    final tiles = tile.devices;
-
-    if (tiles.isEmpty) {
-      return ListTile(
-        title: Text(title),
-      );
-    } else {
-      return Container(
-        margin: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          border: Border.all(color: Theme.of(context).primaryColor),
-        ),
-        child: ExpansionTile(
-          key: PageStorageKey(title),
-          //title of the room
-          title: Text(title),
-          children: tiles
-              .map((tile) => BasicTileWidget(
-                    tile: tile,
-                  ))
+    appBar: AppBar(
+      actions: [
+        PopupMenuButton<String>(
+          icon: Icon(Icons.add),
+          iconSize: 40,
+          onSelected: (value) {
+            switch (value) {
+              case TextsMenu.addDevice:
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => AddDeviceScreen()));
+                break;
+              case TextsMenu.addRoom:
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => AddRoomScreen()));
+                break;
+            }
+          },
+          itemBuilder: (context) => TextsMenu.items
+              .map((item) => PopupMenuItem<String>(
+            value: item,
+            child: Text(item),
+          ))
               .toList(),
         ),
-      );
-    }
-  }
+      ],
+      title: Text("Kōena App"),
+      leading: new Container(),
+      centerTitle: true,
+    ),
+    body: SingleChildScrollView(
+      child: ExpansionPanelList.radio(
+        expansionCallback: (index, isExpanded) {
+          final tile = roomTilesList[index];
+          setState(() => tile.isExpanded = isExpanded);
+        },
+        children: roomTilesList
+            .map((tile) => ExpansionPanelRadio(
+          value: tile.title,
+          canTapOnHeader: true,
+          headerBuilder: (context, isExpanded) => buildTile(tile),
+          body: Column(
+            children: tile.devices.map(buildTile).toList(),
+          ),
+        ))
+            .toList(),
+      ),
+    ),
+  );
+
+  Widget buildTile(BasicTile tile) => ListTile(
+    title: Text(tile.title),
+    onTap: tile.devices.isEmpty
+        && tile.id != 0 ? () =>  Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => DeviceInfoScreen(tile.id)))
+        : null,
+  );
 }

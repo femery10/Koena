@@ -1,15 +1,13 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:meta/meta.dart';
-
 class BasicTile {
   final String title;
   final int id;
   final List<BasicTile> devices;
+  bool isExpanded;
 
-  const BasicTile({
+  BasicTile({
     required this.title,
-    required this.id,
+    this.id = 0,
     this.devices = const [],
+    this.isExpanded = false,
   });
 }
