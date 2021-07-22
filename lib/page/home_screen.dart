@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_listview_example/classes/basic_tile.dart';
 import 'package:expandable_listview_example/classes/device.dart';
 import 'package:expandable_listview_example/classes/room.dart';
+import 'package:expandable_listview_example/page/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -24,11 +25,25 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
+  bool _isSigningOut = false;
+
   late BasicTile deviceHolderTile;
   late BasicTile roomTile;
   List deviceIdsList = [];
   List<BasicTile> roomTilesList = [];
   late Device deviceObject;
+
+  logout() async {
+      setState(() {
+        _isSigningOut = true;
+      });
+      await FirebaseAuth.instance.signOut();
+      setState(() {
+        _isSigningOut = false;
+      });
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => SignInScreen()));
+    }
 
   fetchAllRooms() async {
     FirebaseFirestore.instance
@@ -118,6 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(context).pushReplacement(MaterialPageRoute(
                     builder: (context) => AddRoomScreen()));
                 break;
+              case TextsMenu.logout:
+                logout();
             }
           },
           itemBuilder: (context) => TextsMenu.items
